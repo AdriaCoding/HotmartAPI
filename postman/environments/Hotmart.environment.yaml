@@ -48,6 +48,12 @@ values:
     description:
       content: Pagination cursor. Set automatically by 'Get Subscribers — Full list' test script.
       type: text/plain
+  - key: club_subdomain
+    value: ''
+    enabled: true
+    description:
+      content: Club subdomain for Club API endpoints (e.g. my-subdomain). Find it in your Hotmart Club product settings.
+      type: text/plain
   - key: sandbox_mode
     value: 'false'
     enabled: true

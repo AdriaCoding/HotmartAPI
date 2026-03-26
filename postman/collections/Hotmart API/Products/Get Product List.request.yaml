@@ -11,4 +11,5 @@ description: >-
   `max_results` to control page size.
 url: "{{base_url}}/products/api/v1/products"
 method: GET
+examples: .resources/Get Product List.resources/examples
 order: 1000

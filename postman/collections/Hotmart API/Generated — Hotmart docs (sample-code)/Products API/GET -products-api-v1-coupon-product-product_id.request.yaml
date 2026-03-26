@@ -11,5 +11,5 @@ description: >-
 url: "{{base_url}}/products/api/v1/coupon/product/:product_id"
 method: GET
 pathVariables:
-  product_id: ""
+  product_id: "5092079"
 order: 2000

@@ -10,4 +10,12 @@ description: >-
   `base_url`.
 url: "{{base_url}}/club/api/v1/users"
 method: GET
+queryParams:
+  - key: subdomain
+    value: "{{club_subdomain}}"
+    description: "Required. Club subdomain (e.g. my-subdomain)."
+  - key: email
+    value: ""
+    disabled: true
+    description: "Filter by subscriber email. Optional."
 order: 3000

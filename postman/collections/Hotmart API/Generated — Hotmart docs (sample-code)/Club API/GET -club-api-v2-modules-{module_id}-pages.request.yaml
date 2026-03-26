@@ -10,6 +10,10 @@ description: >-
   `base_url`.
 url: "{{base_url}}/club/api/v2/modules/:module_id/pages"
 method: GET
+queryParams:
+  - key: product_id
+    value: ""
+    description: "Product ID associated with the club. Required per docs sample."
 pathVariables:
   module_id: ""
 order: 5000

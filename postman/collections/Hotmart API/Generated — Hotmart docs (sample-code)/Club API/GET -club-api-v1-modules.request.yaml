@@ -10,4 +10,12 @@ description: >-
   `base_url`.
 url: "{{base_url}}/club/api/v1/modules"
 method: GET
+queryParams:
+  - key: subdomain
+    value: "{{club_subdomain}}"
+    description: "Required. Club subdomain (e.g. my-subdomain)."
+  - key: is_extra
+    value: "false"
+    disabled: true
+    description: "Filter extra modules. Optional."
 order: 1000

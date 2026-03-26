@@ -10,6 +10,10 @@ description: >-
   `base_url`.
 url: "{{base_url}}/club/api/v1/users/:user_id/lessons"
 method: GET
+queryParams:
+  - key: subdomain
+    value: "{{club_subdomain}}"
+    description: "Required. Club subdomain (e.g. my-subdomain)."
 pathVariables:
   user_id: ""
 order: 4000

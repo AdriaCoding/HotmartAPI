@@ -11,5 +11,5 @@ description: >-
 url: "{{base_url}}/products/api/v1/products/:ucode/offers"
 method: GET
 pathVariables:
-  ucode: ""
+  ucode: cf0bfe16-fe12-4c54-97e4-d54d8fe8af8e
 order: 5000
