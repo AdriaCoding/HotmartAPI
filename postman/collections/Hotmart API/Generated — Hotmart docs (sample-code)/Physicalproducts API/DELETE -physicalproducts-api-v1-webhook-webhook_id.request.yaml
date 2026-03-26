@@ -8,11 +8,11 @@ description: >-
 
   Verify path/query placeholders against the official docs and your environment
   `base_url`.
-url: "{{base_url}}/physicalproducts/api/v1/webhook/:webhook_id?partner_identifi\
-  er=:partner_identifier"
+url: "{{base_url}}/physicalproducts/api/v1/webhook/:webhook_id"
 method: DELETE
 queryParams:
-  partner_identifier: :partner_identifier
+  - key: partner_identifier
+    value: ""
 pathVariables:
   webhook_id: ""
 order: 11000

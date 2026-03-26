@@ -1,5 +1,5 @@
 $kind: http-request
-name: GET /club/api/v1/users/{user_id}/lessons
+name: GET /club/api/v1/users/:user_id/lessons
 description: >-
   Auto-generated from Hotmart Developers docs (Gatsby `sample-code` extraction).
 
@@ -8,6 +8,8 @@ description: >-
 
   Verify path/query placeholders against the official docs and your environment
   `base_url`.
-url: "{{base_url}}/club/api/v1/users/{user_id}/lessons"
+url: "{{base_url}}/club/api/v1/users/:user_id/lessons"
 method: GET
+pathVariables:
+  user_id: ""
 order: 4000
