@@ -1,13 +1,18 @@
 $kind: http-request
 name: POST /accounts/api/v1/info
 description: >-
-  Auto-generated from Hotmart Developers docs (Gatsby `sample-code` extraction).
+  GraphQL endpoint for querying account data by user ucode.
 
 
-  Confidence: high.
-
-  Verify path/query placeholders against the official docs and your environment
-  `base_url`.
+  Send a JSON body with a `query` field containing the GraphQL query and an
+  optional `variables` object. Replace `:ucode` with the target account's ucode.
 url: "{{base_url}}/accounts/api/v1/info"
 method: POST
+body:
+  type: application/json
+  value: >-
+    {
+      "query": "{ accountByFilterToExternalApplication(accountInput:{ucode: \"{{account_ucode}}\"}) { addressCity, addressComplement, addressNumber, addressState, addressStreet, birthDate, country, docType, docValue, documents { type, value }, email, entityType, legalName, motherName, name, ucode, partners { name, participationPercentage } } }",
+      "variables": {}
+    }
 order: 1000

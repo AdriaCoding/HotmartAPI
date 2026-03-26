@@ -10,6 +10,10 @@ description: >-
   `base_url`.
 url: "{{base_url}}/club/api/v1/modules/:module_id/pages"
 method: GET
+queryParams:
+  - key: subdomain
+    value: "{{club_subdomain}}"
+    description: Required. Club subdomain (e.g. my-subdomain).
 pathVariables:
   module_id: ""
 order: 2000

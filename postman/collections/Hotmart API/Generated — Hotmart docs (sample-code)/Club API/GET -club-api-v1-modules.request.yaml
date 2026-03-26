@@ -8,14 +8,14 @@ description: >-
 
   Verify path/query placeholders against the official docs and your environment
   `base_url`.
-url: "{{base_url}}/club/api/v1/modules"
+url: "{{base_url}}/club/api/v1/modules?subdomain={{club_subdomain}}"
 method: GET
 queryParams:
   - key: subdomain
     value: "{{club_subdomain}}"
-    description: "Required. Club subdomain (e.g. my-subdomain)."
+    description: Required. Club subdomain (e.g. my-subdomain).
   - key: is_extra
     value: "false"
     disabled: true
-    description: "Filter extra modules. Optional."
+    description: Filter extra modules. Optional.
 order: 1000
