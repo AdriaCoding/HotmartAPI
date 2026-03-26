@@ -1,37 +1,53 @@
 name: Hotmart
 values:
   - key: client_id
+    value: ''
     enabled: true
-    description: 'Client ID from https://app-vlc.hotmart.com/tools/credentials — do not commit real values'
-    secret: true
+    description:
+      content: 'Client ID from https://app-vlc.hotmart.com/tools/credentials — do not commit real values'
+      type: text/plain
   - key: client_secret
+    value: ''
     enabled: true
-    description: 'Client Secret from https://app-vlc.hotmart.com/tools/credentials — do not commit real values'
-    secret: true
+    description:
+      content: 'Client Secret from https://app-vlc.hotmart.com/tools/credentials — do not commit real values'
+      type: text/plain
   - key: basic_token
+    value: ''
     enabled: true
-    description: 'Pre-built Basic token provided by Hotmart: Basic base64(client_id:client_secret). From the same credentials page.'
-    secret: true
+    description:
+      content: 'Pre-built Basic token provided by Hotmart: Basic base64(client_id:client_secret). From the same credentials page.'
+      type: text/plain
   - key: access_token
     value: ''
     enabled: true
-    description: Bearer token obtained by running 'Auth / Get Access Token'. Set automatically by the test script.
+    description:
+      content: Bearer token obtained by running 'Auth / Get Access Token'. Set automatically by the test script.
+      type: text/plain
   - key: token_expires_at
     value: ''
     enabled: true
-    description: Unix timestamp (ms) when the current access_token expires. Set automatically by the test script.
+    description:
+      content: Unix timestamp (ms) when the current access_token expires. Set automatically by the test script.
+      type: text/plain
   - key: product_id
     value: ''
     enabled: true
-    description: 7-digit Hotmart product ID for the mentorship subscription. Used in all subscriber queries.
+    description:
+      content: 7-digit Hotmart product ID for the mentorship subscription. Used in all subscriber queries.
+      type: text/plain
   - key: subscriber_email
     value: ''
     enabled: true
-    description: Email address to look up in the 'Verify student (HM-003)' request.
+    description:
+      content: Email address to look up in the 'Verify student (HM-003)' request.
+      type: text/plain
   - key: next_page_token
     value: ''
     enabled: true
-    description: Pagination cursor. Set automatically by 'Get Subscribers — Full list' test script.
+    description:
+      content: Pagination cursor. Set automatically by 'Get Subscribers — Full list' test script.
+      type: text/plain
   - key: sandbox_mode
     value: 'false'
     enabled: true
