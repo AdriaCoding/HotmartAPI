@@ -1,0 +1,15 @@
+$kind: http-request
+name: GET /products/api/v1/products/:ucode/plans
+description: >-
+  Auto-generated from Hotmart Developers docs (Gatsby `sample-code` extraction).
+
+
+  Confidence: high.
+
+  Verify path/query placeholders against the official docs and your environment
+  `base_url`.
+url: "{{base_url}}/products/api/v1/products/:ucode/plans"
+method: GET
+pathVariables:
+  ucode: ""
+order: 6000

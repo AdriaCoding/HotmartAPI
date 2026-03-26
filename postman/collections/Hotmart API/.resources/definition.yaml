@@ -1,0 +1,48 @@
+$kind: collection
+name: Hotmart API
+description: >-
+  Minimal Hotmart API surface used by OrganicEcom (subscriber verification +
+  auth).
+
+
+  Source contracts:
+
+  - docs/contracts/hotmart.md
+
+  - docs/contracts/hotmart.openapi.yaml
+
+
+  **Setup:**
+
+  1. Import the companion environment file (hotmart.postman_environment.json).
+
+  2. Fill in `client_id`, `client_secret`, and `basic_token` with your
+  credentials from https://app-vlc.hotmart.com/tools/credentials
+
+  3. Fill in `product_id` with your 7-digit mentorship product ID.
+
+  4. Run "Auth / Get Access Token" — the `access_token` variable will be set
+  automatically by the test script.
+
+  5. Use the subscription endpoints. Any request that gets a 401 should re-run
+  the auth step first.
+variables:
+  base_url: https://developers.hotmart.com
+  sandbox_base_url: https://sandbox.hotmart.com
+scripts:
+  - type: http:beforeRequest
+    code: |-
+      // Auto-resolve base_url based on sandbox_mode flag
+      const isSandbox = pm.environment.get('sandbox_mode');
+      if (isSandbox === 'true' || isSandbox === true) {
+          pm.environment.set('base_url', 'https://sandbox.hotmart.com');
+      } else {
+          pm.environment.set('base_url', 'https://developers.hotmart.com');
+      }
+    language: text/javascript
+auth:
+  - id: db89c8eb-3251-4a30-979c-dfe4d75b43da
+    type: bearer
+    name: bearer auth
+    credentials:
+      token: "{{access_token}}"

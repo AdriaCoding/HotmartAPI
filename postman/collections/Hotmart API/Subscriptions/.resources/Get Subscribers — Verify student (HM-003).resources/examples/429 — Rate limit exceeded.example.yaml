@@ -1,0 +1,23 @@
+$kind: http-example
+request:
+  url: ""
+  method: GET
+response:
+  statusCode: 429
+  statusText: Too Many Requests
+  headers:
+    Content-Type: application/json
+    RateLimit-Limit: "500"
+    RateLimit-Remaining: "0"
+    RateLimit-Reset: "42"
+    X-RateLimit-Limit-Minute: "500"
+    X-RateLimit-Remaining-Minute: "0"
+  body:
+    type: text
+    content: >-
+      {
+        "error": "too_many_requests",
+        "error_description": "Rate limit exceeded. Retry after RateLimit-Reset seconds.",
+        "error_uri": "https://developers.hotmart.com/docs/en/start/http-response-codes/"
+      }
+order: 6000

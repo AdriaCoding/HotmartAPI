@@ -1,0 +1,15 @@
+$kind: http-request
+name: GET /events/api/v1/:event_id/info
+description: >-
+  Auto-generated from Hotmart Developers docs (Gatsby `sample-code` extraction).
+
+
+  Confidence: high.
+
+  Verify path/query placeholders against the official docs and your environment
+  `base_url`.
+url: "{{base_url}}/events/api/v1/:event_id/info"
+method: GET
+pathVariables:
+  event_id: ""
+order: 1000

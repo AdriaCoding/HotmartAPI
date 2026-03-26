@@ -1,0 +1,15 @@
+$kind: http-request
+name: PUT /physicalproducts/api/v1/webhook/:webhook_id
+description: >-
+  Auto-generated from Hotmart Developers docs (Gatsby `sample-code` extraction).
+
+
+  Confidence: high.
+
+  Verify path/query placeholders against the official docs and your environment
+  `base_url`.
+url: "{{base_url}}/physicalproducts/api/v1/webhook/:webhook_id"
+method: PUT
+pathVariables:
+  webhook_id: ""
+order: 10000

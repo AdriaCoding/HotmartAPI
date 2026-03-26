@@ -1,0 +1,44 @@
+$kind: http-request
+description: >-
+  Obtains a Bearer access_token using client_credentials grant.
+
+
+  The test script automatically stores the token in the `access_token`
+  environment variable.
+
+
+  Token expires after `expires_in` seconds. On 401 `token_expired`, re-run this
+  request.
+url: https://api-sec-vlc.hotmart.com/security/oauth/token
+method: POST
+headers:
+  - key: Authorization
+    value: Basic {{basic_token}}
+    description: "Pre-built Basic token from Hotmart credentials page: Basic
+      base64(client_id:client_secret)"
+  - key: Content-Type
+    value: application/x-www-form-urlencoded
+body:
+  type: urlencoded
+  content:
+    grant_type: client_credentials
+    client_id: "{{client_id}}"
+    client_secret: "{{client_secret}}"
+auth:
+  type: noauth
+scripts:
+  - type: afterResponse
+    code: >-
+      if (pm.response.code === 200) {
+          const body = pm.response.json();
+          pm.environment.set('access_token', body.access_token);
+          pm.environment.set('token_expires_at', Date.now() + (body.expires_in * 1000));
+          console.log('Access token stored. Expires in', body.expires_in, 'seconds.');
+          console.log('access_token starts with:', pm.environment.get('access_token').substring(0, 20));
+          pm.test('Token received', () => pm.expect(body.access_token).to.be.a('string').and.not.empty);
+      } else {
+          pm.test('Token request failed', () => { throw new Error('Status ' + pm.response.code + ': ' + pm.response.text()); });
+      }
+    language: text/javascript
+examples: ./.resources/Get Access Token (Production).resources/examples
+order: 1000

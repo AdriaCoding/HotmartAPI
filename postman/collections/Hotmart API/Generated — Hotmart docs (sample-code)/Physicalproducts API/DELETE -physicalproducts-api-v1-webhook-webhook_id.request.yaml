@@ -1,0 +1,18 @@
+$kind: http-request
+name: DELETE /physicalproducts/api/v1/webhook/:webhook_id
+description: >-
+  Auto-generated from Hotmart Developers docs (Gatsby `sample-code` extraction).
+
+
+  Confidence: high.
+
+  Verify path/query placeholders against the official docs and your environment
+  `base_url`.
+url: "{{base_url}}/physicalproducts/api/v1/webhook/:webhook_id?partner_identifi\
+  er=:partner_identifier"
+method: DELETE
+queryParams:
+  partner_identifier: :partner_identifier
+pathVariables:
+  webhook_id: ""
+order: 11000

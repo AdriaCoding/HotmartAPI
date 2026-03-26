@@ -1,0 +1,15 @@
+$kind: http-request
+name: PUT /payments/api/v1/sales/:transaction_code/refund
+description: >-
+  Auto-generated from Hotmart Developers docs (Gatsby `sample-code` extraction).
+
+
+  Confidence: high.
+
+  Verify path/query placeholders against the official docs and your environment
+  `base_url`.
+url: "{{base_url}}/payments/api/v1/sales/:transaction_code/refund"
+method: PUT
+pathVariables:
+  transaction_code: ""
+order: 8000

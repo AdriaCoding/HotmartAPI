@@ -1,0 +1,4 @@
+$kind: collection
+description: OAuth2 client_credentials flow. Run 'Get Access Token' first; the
+  test script stores the token in {{access_token}} automatically.
+order: 1000

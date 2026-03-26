@@ -1,0 +1,13 @@
+$kind: http-request
+name: GET /club/api/v1/modules/{module_id}/pages
+description: >-
+  Auto-generated from Hotmart Developers docs (Gatsby `sample-code` extraction).
+
+
+  Confidence: high.
+
+  Verify path/query placeholders against the official docs and your environment
+  `base_url`.
+url: "{{base_url}}/club/api/v1/modules/{module_id}/pages"
+method: GET
+order: 2000

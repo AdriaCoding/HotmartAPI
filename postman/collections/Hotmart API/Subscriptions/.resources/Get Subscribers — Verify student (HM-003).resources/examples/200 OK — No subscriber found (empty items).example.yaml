@@ -1,0 +1,20 @@
+$kind: http-example
+request:
+  url: ""
+  method: GET
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Content-Type: application/json
+  body:
+    type: text
+    content: |-
+      {
+        "items": [],
+        "page_info": {
+          "total_results": 0,
+          "results_per_page": 0
+        }
+      }
+order: 2000

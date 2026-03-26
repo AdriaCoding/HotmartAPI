@@ -1,0 +1,15 @@
+$kind: http-request
+name: PUT /products/api/v1/product/configuration/:product_id
+description: >-
+  Auto-generated from Hotmart Developers docs (Gatsby `sample-code` extraction).
+
+
+  Confidence: high.
+
+  Verify path/query placeholders against the official docs and your environment
+  `base_url`.
+url: "{{base_url}}/products/api/v1/product/configuration/:product_id"
+method: PUT
+pathVariables:
+  product_id: ""
+order: 4000

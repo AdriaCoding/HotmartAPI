@@ -1,0 +1,14 @@
+$kind: http-request
+description: >-
+  Returns the list of products associated with the authenticated account.
+
+
+  All optional query params are included as disabled entries — enable them as
+  needed.
+
+
+  **Pagination:** supports cursor-based pagination via `page_token`. Use
+  `max_results` to control page size.
+url: "{{base_url}}/products/api/v1/products"
+method: GET
+order: 1000

@@ -1,0 +1,13 @@
+$kind: http-request
+name: POST /payments/api/v1/link
+description: >-
+  Auto-generated from Hotmart Developers docs (Gatsby `sample-code` extraction).
+
+
+  Confidence: high.
+
+  Verify path/query placeholders against the official docs and your environment
+  `base_url`.
+url: "{{base_url}}/payments/api/v1/link"
+method: POST
+order: 3000

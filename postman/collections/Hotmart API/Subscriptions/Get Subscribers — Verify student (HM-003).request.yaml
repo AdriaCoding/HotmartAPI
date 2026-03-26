@@ -1,0 +1,86 @@
+$kind: http-request
+description: >-
+  Used by HM-003 to verify a logged-in user has an ACTIVE subscription to the
+  mentorship product.
+
+
+  **Authorization logic:** a user is an authorized student if the response
+  contains at least one item with `status == "ACTIVE"` for the configured
+  `product_id`.
+
+
+  Other statuses (OVERDUE, INACTIVE, CANCELLED_*, STARTED, DELAYED) →
+  unauthorized.
+
+
+  **Tip:** pass `max_results=1` + `subscriber_email` for fastest single-user
+  check.
+
+
+  **Rate limit:** 500 req/min. Headers: RateLimit-Limit, RateLimit-Remaining,
+  RateLimit-Reset.
+url: "{{base_url}}/payments/api/v1/subscription/subscribers?subscriber_email={{\
+  subscriber_email}}&product_id={{product_id}}&max_results=1"
+method: GET
+queryParams:
+  - key: subscriber_email
+    value: "{{subscriber_email}}"
+    description: Email of the student to verify. Required for HM-003.
+  - key: product_id
+    value: "{{product_id}}"
+    description: 7-digit mentorship product ID. Required for HM-003.
+  - key: max_results
+    value: "1"
+    description: Only need 1 result for authorization check.
+  - key: status
+    value: ACTIVE
+    disabled: true
+    description: Filter to ACTIVE only for a faster authorization check.
+  - key: subscriber_code
+    value: ""
+    disabled: true
+    description: Alternative to subscriber_email — unique code per subscriber per product.
+  - key: page_token
+    value: ""
+    disabled: true
+    description: Pagination cursor. Use next_page_token from a prior response.
+scripts:
+  - type: beforeRequest
+    code: >-
+      // Auto-refresh token if expired or missing
+
+      const expiresAt = pm.environment.get('token_expires_at');
+
+      const token = pm.environment.get('access_token');
+
+      if (!token || (expiresAt && Date.now() >= parseInt(expiresAt) - 60000)) {
+          console.warn('Access token missing or expiring soon. Run Auth / Get Access Token first.');
+      }
+    language: text/javascript
+  - type: afterResponse
+    code: >-
+      pm.test('Status 200', () => pm.response.to.have.status(200));
+
+
+      if (pm.response.code === 200) {
+          const body = pm.response.json();
+          pm.test('Response has items array', () => pm.expect(body.items).to.be.an('array'));
+          pm.test('Response has page_info', () => pm.expect(body.page_info).to.be.an('object'));
+
+          // HM-003 authorization check
+          const activeItems = (body.items || []).filter(i => i.status === 'ACTIVE');
+          const isAuthorized = activeItems.length > 0;
+          pm.test('HM-003: subscriber is authorized (ACTIVE status found)', () => {
+              pm.expect(isAuthorized, 'No ACTIVE subscription found for this email/product').to.be.true;
+          });
+
+          if (body.items && body.items.length > 0) {
+              console.log('Subscriber status:', body.items[0].status);
+              console.log('Is authorized:', isAuthorized);
+          } else {
+              console.log('No subscribers found for given filters.');
+          }
+      }
+    language: text/javascript
+examples: ./.resources/Get Subscribers — Verify student (HM-003).resources/examples
+order: 1000

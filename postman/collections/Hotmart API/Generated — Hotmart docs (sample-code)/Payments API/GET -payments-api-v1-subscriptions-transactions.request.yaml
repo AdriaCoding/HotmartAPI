@@ -1,0 +1,13 @@
+$kind: http-request
+name: GET /payments/api/v1/subscriptions/transactions
+description: >-
+  Auto-generated from Hotmart Developers docs (Gatsby `sample-code` extraction).
+
+
+  Confidence: high.
+
+  Verify path/query placeholders against the official docs and your environment
+  `base_url`.
+url: "{{base_url}}/payments/api/v1/subscriptions/transactions"
+method: GET
+order: 23000

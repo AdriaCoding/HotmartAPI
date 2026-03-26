@@ -1,0 +1,15 @@
+$kind: http-request
+name: GET /products/api/v1/coupon/product/:product_id
+description: >-
+  Auto-generated from Hotmart Developers docs (Gatsby `sample-code` extraction).
+
+
+  Confidence: high.
+
+  Verify path/query placeholders against the official docs and your environment
+  `base_url`.
+url: "{{base_url}}/products/api/v1/coupon/product/:product_id"
+method: GET
+pathVariables:
+  product_id: ""
+order: 2000

@@ -1,0 +1,55 @@
+$kind: http-example
+request:
+  url: ""
+  method: GET
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Content-Type: application/json
+    RateLimit-Limit: "500"
+    RateLimit-Remaining: "499"
+    RateLimit-Reset: "58"
+  body:
+    type: text
+    content: |-
+      {
+        "items": [
+          {
+            "subscriber_code": "ABCD1234XY",
+            "subscription_id": 1234567,
+            "status": "ACTIVE",
+            "accession_date": 1700000000000,
+            "cancellation_date": null,
+            "creation_date": 1699990000000,
+            "date_next_charge": 1702678400000,
+            "trial": false,
+            "transaction": "HP17715690036014",
+            "plan": {
+              "name": "Mentoria Mensal",
+              "id": 9876543,
+              "recurrency_period": 30,
+              "max_charge_cycles": null
+            },
+            "product": {
+              "id": 5092079,
+              "name": "Mentoria OrganicEcom",
+              "ucode": "abc123xyz"
+            },
+            "price": {
+              "value": 97.00,
+              "currency_code": "BRL"
+            },
+            "subscriber": {
+              "name": "João da Silva",
+              "email": "joao@example.com",
+              "ucode": "sub_ucode_001"
+            }
+          }
+        ],
+        "page_info": {
+          "total_results": 1,
+          "results_per_page": 1
+        }
+      }
+order: 1000

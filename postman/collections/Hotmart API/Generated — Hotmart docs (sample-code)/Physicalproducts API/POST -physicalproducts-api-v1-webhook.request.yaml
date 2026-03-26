@@ -1,0 +1,13 @@
+$kind: http-request
+name: POST /physicalproducts/api/v1/webhook
+description: >-
+  Auto-generated from Hotmart Developers docs (Gatsby `sample-code` extraction).
+
+
+  Confidence: high.
+
+  Verify path/query placeholders against the official docs and your environment
+  `base_url`.
+url: "{{base_url}}/physicalproducts/api/v1/webhook"
+method: POST
+order: 9000

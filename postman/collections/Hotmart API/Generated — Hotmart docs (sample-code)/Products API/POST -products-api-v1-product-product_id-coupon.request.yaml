@@ -1,0 +1,15 @@
+$kind: http-request
+name: POST /products/api/v1/product/:product_id/coupon
+description: >-
+  Auto-generated from Hotmart Developers docs (Gatsby `sample-code` extraction).
+
+
+  Confidence: high.
+
+  Verify path/query placeholders against the official docs and your environment
+  `base_url`.
+url: "{{base_url}}/products/api/v1/product/:product_id/coupon"
+method: POST
+pathVariables:
+  product_id: ""
+order: 3000

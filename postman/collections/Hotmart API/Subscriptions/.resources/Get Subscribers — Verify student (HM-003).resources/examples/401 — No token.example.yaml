@@ -1,0 +1,18 @@
+$kind: http-example
+request:
+  url: ""
+  method: GET
+response:
+  statusCode: 401
+  statusText: Unauthorized
+  headers:
+    Content-Type: application/json
+  body:
+    type: text
+    content: >-
+      {
+        "error": "unauthorized",
+        "error_description": "Full authentication is required to access this resource",
+        "error_uri": "https://developers.hotmart.com/docs/en/start/http-response-codes/"
+      }
+order: 4000

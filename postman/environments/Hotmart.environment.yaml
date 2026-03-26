@@ -1,0 +1,41 @@
+name: Hotmart
+values:
+  - key: client_id
+    enabled: true
+    description: 'Client ID from https://app-vlc.hotmart.com/tools/credentials — do not commit real values'
+    secret: true
+  - key: client_secret
+    enabled: true
+    description: 'Client Secret from https://app-vlc.hotmart.com/tools/credentials — do not commit real values'
+    secret: true
+  - key: basic_token
+    enabled: true
+    description: 'Pre-built Basic token provided by Hotmart: Basic base64(client_id:client_secret). From the same credentials page.'
+    secret: true
+  - key: access_token
+    value: ''
+    enabled: true
+    description: Bearer token obtained by running 'Auth / Get Access Token'. Set automatically by the test script.
+  - key: token_expires_at
+    value: ''
+    enabled: true
+    description: Unix timestamp (ms) when the current access_token expires. Set automatically by the test script.
+  - key: product_id
+    value: ''
+    enabled: true
+    description: 7-digit Hotmart product ID for the mentorship subscription. Used in all subscriber queries.
+  - key: subscriber_email
+    value: ''
+    enabled: true
+    description: Email address to look up in the 'Verify student (HM-003)' request.
+  - key: next_page_token
+    value: ''
+    enabled: true
+    description: Pagination cursor. Set automatically by 'Get Subscribers — Full list' test script.
+  - key: sandbox_mode
+    value: 'false'
+    enabled: true
+  - key: base_url
+    value: 'https://developers.hotmart.com'
+    enabled: true
+color: 0

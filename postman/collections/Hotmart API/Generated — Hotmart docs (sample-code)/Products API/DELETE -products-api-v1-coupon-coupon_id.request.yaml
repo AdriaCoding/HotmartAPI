@@ -1,0 +1,15 @@
+$kind: http-request
+name: DELETE /products/api/v1/coupon/:coupon_id
+description: >-
+  Auto-generated from Hotmart Developers docs (Gatsby `sample-code` extraction).
+
+
+  Confidence: high.
+
+  Verify path/query placeholders against the official docs and your environment
+  `base_url`.
+url: "{{base_url}}/products/api/v1/coupon/:coupon_id"
+method: DELETE
+pathVariables:
+  coupon_id: ""
+order: 1000

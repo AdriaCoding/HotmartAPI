@@ -1,0 +1,9 @@
+$kind: collection
+description: >-
+  Subscription/subscriber endpoints. All requests use `Authorization: Bearer
+  {{access_token}}`.
+
+
+  If a request returns 401 `token_expired`, re-run the Auth / Get Access Token
+  request first.
+order: 2000

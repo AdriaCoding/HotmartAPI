@@ -12,3 +12,4 @@ Thumbs.db
 
 # Optional: local Postman / IDE
 *.local.json
+.postman
