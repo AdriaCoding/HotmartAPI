@@ -1,0 +1,1709 @@
+{
+  "info": {
+    "_postman_id": "a874d8a2-085c-4fc0-baca-e5fcb2da2cd3",
+    "name": "Hotmart API \u2014 OrganicEcom",
+    "description": "Minimal Hotmart API surface used by OrganicEcom (subscriber verification + auth).\n\nSource contracts:\n- docs/contracts/hotmart.md\n- docs/contracts/hotmart.openapi.yaml\n\n**Setup:**\n1. Import the companion environment file (hotmart.postman_environment.json).\n2. Fill in `client_id`, `client_secret`, and `basic_token` with your credentials from https://app-vlc.hotmart.com/tools/credentials\n3. Fill in `product_id` with your 7-digit mentorship product ID.\n4. Run \"Auth / Get Access Token\" \u2014 the `access_token` variable will be set automatically by the test script.\n5. Use the subscription endpoints. Any request that gets a 401 should re-run the auth step first.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "41998974"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Get Access Token (Production)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const body = pm.response.json();",
+                  "    pm.environment.set('access_token', body.access_token);",
+                  "    pm.environment.set('token_expires_at', Date.now() + (body.expires_in * 1000));",
+                  "    console.log('Access token stored. Expires in', body.expires_in, 'seconds.');",
+                  "    console.log('access_token starts with:', pm.environment.get('access_token').substring(0, 20));",
+                  "    pm.test('Token received', () => pm.expect(body.access_token).to.be.a('string').and.not.empty);",
+                  "} else {",
+                  "    pm.test('Token request failed', () => { throw new Error('Status ' + pm.response.code + ': ' + pm.response.text()); });",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Basic {{basic_token}}",
+                "description": "Pre-built Basic token from Hotmart credentials page: Basic base64(client_id:client_secret)"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "grant_type",
+                  "value": "client_credentials",
+                  "type": "text"
+                },
+                {
+                  "key": "client_id",
+                  "value": "{{client_id}}",
+                  "type": "text"
+                },
+                {
+                  "key": "client_secret",
+                  "value": "{{client_secret}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "https://api-sec-vlc.hotmart.com/security/oauth/token",
+              "protocol": "https",
+              "host": [
+                "api-sec-vlc",
+                "hotmart",
+                "com"
+              ],
+              "path": [
+                "security",
+                "oauth",
+                "token"
+              ]
+            },
+            "description": "Obtains a Bearer access_token using client_credentials grant.\n\nThe test script automatically stores the token in the `access_token` environment variable.\n\nToken expires after `expires_in` seconds. On 401 `token_expired`, re-run this request."
+          },
+          "response": [
+            {
+              "name": "200 OK \u2014 Token issued",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": ""
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "Text",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"access_token\": \"eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...\",\n  \"token_type\": \"bearer\",\n  \"expires_in\": 3600,\n  \"scope\": \"\",\n  \"jti\": \"a1b2c3d4-e5f6-7890-abcd-ef1234567890\"\n}"
+            },
+            {
+              "name": "401 \u2014 Invalid credentials",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": ""
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "Text",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"error\": \"unauthorized\",\n  \"error_description\": \"Bad credentials\",\n  \"error_uri\": \"https://developers.hotmart.com/docs/en/start/http-response-codes/\"\n}"
+            }
+          ]
+        }
+      ],
+      "description": "OAuth2 client_credentials flow. Run 'Get Access Token' first; the test script stores the token in {{access_token}} automatically."
+    },
+    {
+      "name": "Subscriptions",
+      "item": [
+        {
+          "name": "Get Subscribers \u2014 Verify student (HM-003)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Auto-refresh token if expired or missing",
+                  "const expiresAt = pm.environment.get('token_expires_at');",
+                  "const token = pm.environment.get('access_token');",
+                  "if (!token || (expiresAt && Date.now() >= parseInt(expiresAt) - 60000)) {",
+                  "    console.warn('Access token missing or expiring soon. Run Auth / Get Access Token first.');",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    const body = pm.response.json();",
+                  "    pm.test('Response has items array', () => pm.expect(body.items).to.be.an('array'));",
+                  "    pm.test('Response has page_info', () => pm.expect(body.page_info).to.be.an('object'));",
+                  "",
+                  "    // HM-003 authorization check",
+                  "    const activeItems = (body.items || []).filter(i => i.status === 'ACTIVE');",
+                  "    const isAuthorized = activeItems.length > 0;",
+                  "    pm.test('HM-003: subscriber is authorized (ACTIVE status found)', () => {",
+                  "        pm.expect(isAuthorized, 'No ACTIVE subscription found for this email/product').to.be.true;",
+                  "    });",
+                  "",
+                  "    if (body.items && body.items.length > 0) {",
+                  "        console.log('Subscriber status:', body.items[0].status);",
+                  "        console.log('Is authorized:', isAuthorized);",
+                  "    } else {",
+                  "        console.log('No subscribers found for given filters.');",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/payments/api/v1/subscription/subscribers?subscriber_email={{subscriber_email}}&product_id={{product_id}}&max_results=1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "payments",
+                "api",
+                "v1",
+                "subscription",
+                "subscribers"
+              ],
+              "query": [
+                {
+                  "key": "subscriber_email",
+                  "value": "{{subscriber_email}}",
+                  "description": "Email of the student to verify. Required for HM-003."
+                },
+                {
+                  "key": "product_id",
+                  "value": "{{product_id}}",
+                  "description": "7-digit mentorship product ID. Required for HM-003."
+                },
+                {
+                  "key": "max_results",
+                  "value": "1",
+                  "description": "Only need 1 result for authorization check."
+                },
+                {
+                  "key": "status",
+                  "value": "ACTIVE",
+                  "description": "Filter to ACTIVE only for a faster authorization check.",
+                  "disabled": true
+                },
+                {
+                  "key": "subscriber_code",
+                  "value": "",
+                  "description": "Alternative to subscriber_email \u2014 unique code per subscriber per product.",
+                  "disabled": true
+                },
+                {
+                  "key": "page_token",
+                  "value": "",
+                  "description": "Pagination cursor. Use next_page_token from a prior response.",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Used by HM-003 to verify a logged-in user has an ACTIVE subscription to the mentorship product.\n\n**Authorization logic:** a user is an authorized student if the response contains at least one item with `status == \"ACTIVE\"` for the configured `product_id`.\n\nOther statuses (OVERDUE, INACTIVE, CANCELLED_*, STARTED, DELAYED) \u2192 unauthorized.\n\n**Tip:** pass `max_results=1` + `subscriber_email` for fastest single-user check.\n\n**Rate limit:** 500 req/min. Headers: RateLimit-Limit, RateLimit-Remaining, RateLimit-Reset."
+          },
+          "response": [
+            {
+              "name": "200 OK \u2014 Active subscriber found",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": ""
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "Text",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "RateLimit-Limit",
+                  "value": "500"
+                },
+                {
+                  "key": "RateLimit-Remaining",
+                  "value": "499"
+                },
+                {
+                  "key": "RateLimit-Reset",
+                  "value": "58"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"items\": [\n    {\n      \"subscriber_code\": \"ABCD1234XY\",\n      \"subscription_id\": 1234567,\n      \"status\": \"ACTIVE\",\n      \"accession_date\": 1700000000000,\n      \"cancellation_date\": null,\n      \"creation_date\": 1699990000000,\n      \"date_next_charge\": 1702678400000,\n      \"trial\": false,\n      \"transaction\": \"HP17715690036014\",\n      \"plan\": {\n        \"name\": \"Mentoria Mensal\",\n        \"id\": 9876543,\n        \"recurrency_period\": 30,\n        \"max_charge_cycles\": null\n      },\n      \"product\": {\n        \"id\": 5092079,\n        \"name\": \"Mentoria OrganicEcom\",\n        \"ucode\": \"abc123xyz\"\n      },\n      \"price\": {\n        \"value\": 97.00,\n        \"currency_code\": \"BRL\"\n      },\n      \"subscriber\": {\n        \"name\": \"Jo\u00e3o da Silva\",\n        \"email\": \"joao@example.com\",\n        \"ucode\": \"sub_ucode_001\"\n      }\n    }\n  ],\n  \"page_info\": {\n    \"total_results\": 1,\n    \"results_per_page\": 1\n  }\n}"
+            },
+            {
+              "name": "200 OK \u2014 No subscriber found (empty items)",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": ""
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "Text",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"items\": [],\n  \"page_info\": {\n    \"total_results\": 0,\n    \"results_per_page\": 0\n  }\n}"
+            },
+            {
+              "name": "401 \u2014 Token expired",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": ""
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "Text",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"error\": \"token_expired\",\n  \"error_description\": \"Access token expired\",\n  \"error_uri\": \"https://developers.hotmart.com/docs/en/start/http-response-codes/\"\n}"
+            },
+            {
+              "name": "401 \u2014 No token",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": ""
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "Text",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"error\": \"unauthorized\",\n  \"error_description\": \"Full authentication is required to access this resource\",\n  \"error_uri\": \"https://developers.hotmart.com/docs/en/start/http-response-codes/\"\n}"
+            },
+            {
+              "name": "403 \u2014 Credential lacks permission",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": ""
+                }
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "_postman_previewlanguage": "Text",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"error\": \"unauthorized_client\",\n  \"error_description\": \"The client is not authorized to request a token using this method\",\n  \"error_uri\": \"https://developers.hotmart.com/docs/en/start/http-response-codes/\"\n}"
+            },
+            {
+              "name": "429 \u2014 Rate limit exceeded",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": ""
+                }
+              },
+              "status": "Too Many Requests",
+              "code": 429,
+              "_postman_previewlanguage": "Text",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "RateLimit-Limit",
+                  "value": "500"
+                },
+                {
+                  "key": "RateLimit-Remaining",
+                  "value": "0"
+                },
+                {
+                  "key": "RateLimit-Reset",
+                  "value": "42"
+                },
+                {
+                  "key": "X-RateLimit-Limit-Minute",
+                  "value": "500"
+                },
+                {
+                  "key": "X-RateLimit-Remaining-Minute",
+                  "value": "0"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"error\": \"too_many_requests\",\n  \"error_description\": \"Rate limit exceeded. Retry after RateLimit-Reset seconds.\",\n  \"error_uri\": \"https://developers.hotmart.com/docs/en/start/http-response-codes/\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Subscribers \u2014 Full list (paginated)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    const body = pm.response.json();",
+                  "    pm.test('Has items', () => pm.expect(body.items).to.be.an('array'));",
+                  "",
+                  "    // Store next page token if present",
+                  "    if (body.page_info && body.page_info.next_page_token) {",
+                  "        pm.environment.set('next_page_token', body.page_info.next_page_token);",
+                  "        console.log('Next page token stored:', body.page_info.next_page_token);",
+                  "    } else {",
+                  "        pm.environment.unset('next_page_token');",
+                  "        console.log('Last page reached.');",
+                  "    }",
+                  "",
+                  "    console.log('Items on page:', body.items.length);",
+                  "    console.log('Total results:', body.page_info && body.page_info.total_results);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/payments/api/v1/subscription/subscribers?product_id={{product_id}}&max_results=50",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "payments",
+                "api",
+                "v1",
+                "subscription",
+                "subscribers"
+              ],
+              "query": [
+                {
+                  "key": "product_id",
+                  "value": "{{product_id}}",
+                  "description": "7-digit mentorship product ID."
+                },
+                {
+                  "key": "max_results",
+                  "value": "50",
+                  "description": "Items per page."
+                },
+                {
+                  "key": "page_token",
+                  "value": "{{next_page_token}}",
+                  "description": "Pagination cursor from previous response. Leave empty for first page.",
+                  "disabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "ACTIVE",
+                  "description": "Filter by status. Options: ACTIVE, INACTIVE, OVERDUE, CANCELLED_BY_CUSTOMER, CANCELLED_BY_SELLER, CANCELLED_BY_ADMIN, STARTED, DELAYED",
+                  "disabled": true
+                },
+                {
+                  "key": "subscriber_email",
+                  "value": "",
+                  "description": "Filter by subscriber email.",
+                  "disabled": true
+                },
+                {
+                  "key": "subscriber_code",
+                  "value": "",
+                  "description": "Filter by subscriber code.",
+                  "disabled": true
+                },
+                {
+                  "key": "plan_name",
+                  "value": "",
+                  "description": "Filter by plan name. Repeatable for multiple values.",
+                  "disabled": true
+                },
+                {
+                  "key": "plan_id",
+                  "value": "",
+                  "description": "Filter by plan ID.",
+                  "disabled": true
+                },
+                {
+                  "key": "trial",
+                  "value": "false",
+                  "description": "Filter to subscriptions with (true) or without (false) a trial period.",
+                  "disabled": true
+                },
+                {
+                  "key": "transaction",
+                  "value": "",
+                  "description": "Filter by transaction ID (e.g. HP17715690036014).",
+                  "disabled": true
+                },
+                {
+                  "key": "accession_date",
+                  "value": "",
+                  "description": "Filter subscriptions from this date (ms since epoch).",
+                  "disabled": true
+                },
+                {
+                  "key": "cancellation_date",
+                  "value": "",
+                  "description": "Filter by cancellation date (ms since epoch).",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Lists all subscribers for a product. Supports cursor-based pagination via `page_token`.\n\nThe test script automatically stores `next_page_token` in the environment for chained pagination.\n\nAll optional query params are included as disabled entries \u2014 enable them as needed."
+          },
+          "response": []
+        }
+      ],
+      "description": "Subscription/subscriber endpoints. All requests use `Authorization: Bearer {{access_token}}`.\n\nIf a request returns 401 `token_expired`, re-run the Auth / Get Access Token request first."
+    },
+    {
+      "name": "Products",
+      "item": [
+        {
+          "name": "Get Product List",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/products/api/v1/products",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "products",
+                "api",
+                "v1",
+                "products"
+              ]
+            },
+            "description": "Returns the list of products associated with the authenticated account.\n\nAll optional query params are included as disabled entries \u2014 enable them as needed.\n\n**Pagination:** supports cursor-based pagination via `page_token`. Use `max_results` to control page size."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Generated \u2014 Hotmart docs (sample-code)",
+      "description": "Requests generated by `scripts/hotmart-docs-crawl/postman_extend.py` from Hotmart docs static-query `sample-code` blocks. Review before relying on paths/params.",
+      "item": [
+        {
+          "name": "Accounts API",
+          "item": [
+            {
+              "name": "POST /accounts/api/v1/info",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/accounts/api/v1/info",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "accounts",
+                    "api",
+                    "v1",
+                    "info"
+                  ]
+                },
+                "description": "Auto-generated from Hotmart Developers docs (Gatsby `sample-code` extraction).\n\nConfidence: high.\nVerify path/query placeholders against the official docs and your environment `base_url`."
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Club API",
+          "item": [
+            {
+              "name": "GET /club/api/v1/modules",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/club/api/v1/modules",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "club",
+                    "api",
+                    "v1",
+                    "modules"
+                  ]
+                },
+                "description": "Auto-generated from Hotmart Developers docs (Gatsby `sample-code` extraction).\n\nConfidence: high.\nVerify path/query placeholders against the official docs and your environment `base_url`."
+              },
+              "response": []
+            },
+            {
+              "name": "GET /club/api/v1/modules/{module_id}/pages",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/club/api/v1/modules/{module_id}/pages",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "club",
+                    "api",
+                    "v1",
+                    "modules",
+                    "{module_id}",
+                    "pages"
+                  ]
+                },
+                "description": "Auto-generated from Hotmart Developers docs (Gatsby `sample-code` extraction).\n\nConfidence: high.\nVerify path/query placeholders against the official docs and your environment `base_url`."
+              },
+              "response": []
+            },
+            {
+              "name": "GET /club/api/v1/users",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/club/api/v1/users",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "club",
+                    "api",
+                    "v1",
+                    "users"
+                  ]
+                },
+                "description": "Auto-generated from Hotmart Developers docs (Gatsby `sample-code` extraction).\n\nConfidence: high.\nVerify path/query placeholders against the official docs and your environment `base_url`."
+              },
+              "response": []
+            },
+            {
+              "name": "GET /club/api/v1/users/{user_id}/lessons",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/club/api/v1/users/{user_id}/lessons",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "club",
+                    "api",
+                    "v1",
+                    "users",
+                    "{user_id}",
+                    "lessons"
+                  ]
+                },
+                "description": "Auto-generated from Hotmart Developers docs (Gatsby `sample-code` extraction).\n\nConfidence: high.\nVerify path/query placeholders against the official docs and your environment `base_url`."
+              },
+              "response": []
+            },
+            {
+              "name": "GET /club/api/v2/modules/{module_id}/pages",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/club/api/v2/modules/{module_id}/pages",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "club",
+                    "api",
+                    "v2",
+                    "modules",
+                    "{module_id}",
+                    "pages"
+                  ]
+                },
+                "description": "Auto-generated from Hotmart Developers docs (Gatsby `sample-code` extraction).\n\nConfidence: high.\nVerify path/query placeholders against the official docs and your environment `base_url`."
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Events API",
+          "item": [
+            {
+              "name": "GET /events/api/v1/:event_id/info",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/events/api/v1/:event_id/info",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "events",
+                    "api",
+                    "v1",
+                    ":event_id",
+                    "info"
+                  ]
+                },
+                "description": "Auto-generated from Hotmart Developers docs (Gatsby `sample-code` extraction).\n\nConfidence: high.\nVerify path/query placeholders against the official docs and your environment `base_url`."
+              },
+              "response": []
+            },
+            {
+              "name": "GET /events/api/v1/:event_id/participants",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/events/api/v1/:event_id/participants",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "events",
+                    "api",
+                    "v1",
+                    ":event_id",
+                    "participants"
+                  ]
+                },
+                "description": "Auto-generated from Hotmart Developers docs (Gatsby `sample-code` extraction).\n\nConfidence: high.\nVerify path/query placeholders against the official docs and your environment `base_url`."
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Payments API",
+          "item": [
+            {
+              "name": "POST /payments/api/v1/installments/negotiate",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/payments/api/v1/installments/negotiate",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "payments",
+                    "api",
+                    "v1",
+                    "installments",
+                    "negotiate"
+                  ]
+                },
+                "description": "Auto-generated from Hotmart Developers docs (Gatsby `sample-code` extraction).\n\nConfidence: high.\nVerify path/query placeholders against the official docs and your environment `base_url`."
+              },
+              "response": []
+            },
+            {
+              "name": "GET /payments/api/v1/link",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/payments/api/v1/link",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "payments",
+                    "api",
+                    "v1",
+                    "link"
+                  ]
+                },
+                "description": "Auto-generated from Hotmart Developers docs (Gatsby `sample-code` extraction).\n\nConfidence: high.\nVerify path/query placeholders against the official docs and your environment `base_url`."
+              },
+              "response": []
+            },
+            {
+              "name": "POST /payments/api/v1/link",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/payments/api/v1/link",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "payments",
+                    "api",
+                    "v1",
+                    "link"
+                  ]
+                },
+                "description": "Auto-generated from Hotmart Developers docs (Gatsby `sample-code` extraction).\n\nConfidence: high.\nVerify path/query placeholders against the official docs and your environment `base_url`."
+              },
+              "response": []
+            },
+            {
+              "name": "POST /payments/api/v1/link/:payment_link_ucode/offer",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/payments/api/v1/link/:payment_link_ucode/offer",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "payments",
+                    "api",
+                    "v1",
+                    "link",
+                    ":payment_link_ucode",
+                    "offer"
+                  ]
+                },
+                "description": "Auto-generated from Hotmart Developers docs (Gatsby `sample-code` extraction).\n\nConfidence: high.\nVerify path/query placeholders against the official docs and your environment `base_url`."
+              },
+              "response": []
+            },
+            {
+              "name": "POST /payments/api/v1/link/:payment_link_ucode/plan",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/payments/api/v1/link/:payment_link_ucode/plan",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "payments",
+                    "api",
+                    "v1",
+                    "link",
+                    ":payment_link_ucode",
+                    "plan"
+                  ]
+                },
+                "description": "Auto-generated from Hotmart Developers docs (Gatsby `sample-code` extraction).\n\nConfidence: high.\nVerify path/query placeholders against the official docs and your environment `base_url`."
+              },
+              "response": []
+            },
+            {
+              "name": "POST /payments/api/v1/link/token/charge/offer",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/payments/api/v1/link/token/charge/offer",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "payments",
+                    "api",
+                    "v1",
+                    "link",
+                    "token",
+                    "charge",
+                    "offer"
+                  ]
+                },
+                "description": "Auto-generated from Hotmart Developers docs (Gatsby `sample-code` extraction).\n\nConfidence: high.\nVerify path/query placeholders against the official docs and your environment `base_url`."
+              },
+              "response": []
+            },
+            {
+              "name": "POST /payments/api/v1/link/token/charge/value",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/payments/api/v1/link/token/charge/value",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "payments",
+                    "api",
+                    "v1",
+                    "link",
+                    "token",
+                    "charge",
+                    "value"
+                  ]
+                },
+                "description": "Auto-generated from Hotmart Developers docs (Gatsby `sample-code` extraction).\n\nConfidence: high.\nVerify path/query placeholders against the official docs and your environment `base_url`."
+              },
+              "response": []
+            },
+            {
+              "name": "PUT /payments/api/v1/sales/:transaction_code/refund",
+              "request": {
+                "method": "PUT",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/payments/api/v1/sales/:transaction_code/refund",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "payments",
+                    "api",
+                    "v1",
+                    "sales",
+                    ":transaction_code",
+                    "refund"
+                  ]
+                },
+                "description": "Auto-generated from Hotmart Developers docs (Gatsby `sample-code` extraction).\n\nConfidence: high.\nVerify path/query placeholders against the official docs and your environment `base_url`."
+              },
+              "response": []
+            },
+            {
+              "name": "GET /payments/api/v1/sales/commissions",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/payments/api/v1/sales/commissions",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "payments",
+                    "api",
+                    "v1",
+                    "sales",
+                    "commissions"
+                  ]
+                },
+                "description": "Auto-generated from Hotmart Developers docs (Gatsby `sample-code` extraction).\n\nConfidence: high.\nVerify path/query placeholders against the official docs and your environment `base_url`."
+              },
+              "response": []
+            },
+            {
+              "name": "GET /payments/api/v1/sales/history",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/payments/api/v1/sales/history",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "payments",
+                    "api",
+                    "v1",
+                    "sales",
+                    "history"
+                  ]
+                },
+                "description": "Auto-generated from Hotmart Developers docs (Gatsby `sample-code` extraction).\n\nConfidence: high.\nVerify path/query placeholders against the official docs and your environment `base_url`."
+              },
+              "response": []
+            },
+            {
+              "name": "GET /payments/api/v1/sales/price/details",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/payments/api/v1/sales/price/details",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "payments",
+                    "api",
+                    "v1",
+                    "sales",
+                    "price",
+                    "details"
+                  ]
+                },
+                "description": "Auto-generated from Hotmart Developers docs (Gatsby `sample-code` extraction).\n\nConfidence: high.\nVerify path/query placeholders against the official docs and your environment `base_url`."
+              },
+              "response": []
+            },
+            {
+              "name": "GET /payments/api/v1/sales/summary",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/payments/api/v1/sales/summary",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "payments",
+                    "api",
+                    "v1",
+                    "sales",
+                    "summary"
+                  ]
+                },
+                "description": "Auto-generated from Hotmart Developers docs (Gatsby `sample-code` extraction).\n\nConfidence: high.\nVerify path/query placeholders against the official docs and your environment `base_url`."
+              },
+              "response": []
+            },
+            {
+              "name": "GET /payments/api/v1/sales/users",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/payments/api/v1/sales/users",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "payments",
+                    "api",
+                    "v1",
+                    "sales",
+                    "users"
+                  ]
+                },
+                "description": "Auto-generated from Hotmart Developers docs (Gatsby `sample-code` extraction).\n\nConfidence: high.\nVerify path/query placeholders against the official docs and your environment `base_url`."
+              },
+              "response": []
+            },
+            {
+              "name": "GET /payments/api/v1/subscriptions",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/payments/api/v1/subscriptions",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "payments",
+                    "api",
+                    "v1",
+                    "subscriptions"
+                  ]
+                },
+                "description": "Auto-generated from Hotmart Developers docs (Gatsby `sample-code` extraction).\n\nConfidence: high.\nVerify path/query placeholders against the official docs and your environment `base_url`."
+              },
+              "response": []
+            },
+            {
+              "name": "PATCH /payments/api/v1/subscriptions/:subscriber_code",
+              "request": {
+                "method": "PATCH",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/payments/api/v1/subscriptions/:subscriber_code",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "payments",
+                    "api",
+                    "v1",
+                    "subscriptions",
+                    ":subscriber_code"
+                  ]
+                },
+                "description": "Auto-generated from Hotmart Developers docs (Gatsby `sample-code` extraction).\n\nConfidence: high.\nVerify path/query placeholders against the official docs and your environment `base_url`."
+              },
+              "response": []
+            },
+            {
+              "name": "POST /payments/api/v1/subscriptions/:subscriber_code/cancel",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/payments/api/v1/subscriptions/:subscriber_code/cancel",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "payments",
+                    "api",
+                    "v1",
+                    "subscriptions",
+                    ":subscriber_code",
+                    "cancel"
+                  ]
+                },
+                "description": "Auto-generated from Hotmart Developers docs (Gatsby `sample-code` extraction).\n\nConfidence: high.\nVerify path/query placeholders against the official docs and your environment `base_url`."
+              },
+              "response": []
+            },
+            {
+              "name": "POST /payments/api/v1/subscriptions/:subscriber_code/reactivate",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/payments/api/v1/subscriptions/:subscriber_code/reactivate",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "payments",
+                    "api",
+                    "v1",
+                    "subscriptions",
+                    ":subscriber_code",
+                    "reactivate"
+                  ]
+                },
+                "description": "Auto-generated from Hotmart Developers docs (Gatsby `sample-code` extraction).\n\nConfidence: high.\nVerify path/query placeholders against the official docs and your environment `base_url`."
+              },
+              "response": []
+            },
+            {
+              "name": "POST /payments/api/v1/subscriptions/cancel",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/payments/api/v1/subscriptions/cancel",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "payments",
+                    "api",
+                    "v1",
+                    "subscriptions",
+                    "cancel"
+                  ]
+                },
+                "description": "Auto-generated from Hotmart Developers docs (Gatsby `sample-code` extraction).\n\nConfidence: high.\nVerify path/query placeholders against the official docs and your environment `base_url`."
+              },
+              "response": []
+            },
+            {
+              "name": "POST /payments/api/v1/subscriptions/reactivate",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/payments/api/v1/subscriptions/reactivate",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "payments",
+                    "api",
+                    "v1",
+                    "subscriptions",
+                    "reactivate"
+                  ]
+                },
+                "description": "Auto-generated from Hotmart Developers docs (Gatsby `sample-code` extraction).\n\nConfidence: high.\nVerify path/query placeholders against the official docs and your environment `base_url`."
+              },
+              "response": []
+            },
+            {
+              "name": "GET /payments/api/v1/subscriptions/summary",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/payments/api/v1/subscriptions/summary",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "payments",
+                    "api",
+                    "v1",
+                    "subscriptions",
+                    "summary"
+                  ]
+                },
+                "description": "Auto-generated from Hotmart Developers docs (Gatsby `sample-code` extraction).\n\nConfidence: high.\nVerify path/query placeholders against the official docs and your environment `base_url`."
+              },
+              "response": []
+            },
+            {
+              "name": "POST /payments/api/v1/subscriptions/switch-plan",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/payments/api/v1/subscriptions/switch-plan",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "payments",
+                    "api",
+                    "v1",
+                    "subscriptions",
+                    "switch-plan"
+                  ]
+                },
+                "description": "Auto-generated from Hotmart Developers docs (Gatsby `sample-code` extraction).\n\nConfidence: high.\nVerify path/query placeholders against the official docs and your environment `base_url`."
+              },
+              "response": []
+            },
+            {
+              "name": "GET /payments/api/v1/subscriptions/switch-plan/plans",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/payments/api/v1/subscriptions/switch-plan/plans",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "payments",
+                    "api",
+                    "v1",
+                    "subscriptions",
+                    "switch-plan",
+                    "plans"
+                  ]
+                },
+                "description": "Auto-generated from Hotmart Developers docs (Gatsby `sample-code` extraction).\n\nConfidence: high.\nVerify path/query placeholders against the official docs and your environment `base_url`."
+              },
+              "response": []
+            },
+            {
+              "name": "GET /payments/api/v1/subscriptions/transactions",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/payments/api/v1/subscriptions/transactions",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "payments",
+                    "api",
+                    "v1",
+                    "subscriptions",
+                    "transactions"
+                  ]
+                },
+                "description": "Auto-generated from Hotmart Developers docs (Gatsby `sample-code` extraction).\n\nConfidence: high.\nVerify path/query placeholders against the official docs and your environment `base_url`."
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Physicalproducts API",
+          "item": [
+            {
+              "name": "POST /physicalproducts/api/v1/credentials",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/physicalproducts/api/v1/credentials",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "physicalproducts",
+                    "api",
+                    "v1",
+                    "credentials"
+                  ]
+                },
+                "description": "Auto-generated from Hotmart Developers docs (Gatsby `sample-code` extraction).\n\nConfidence: high.\nVerify path/query placeholders against the official docs and your environment `base_url`."
+              },
+              "response": []
+            },
+            {
+              "name": "PUT /physicalproducts/api/v1/credentials/:client_id",
+              "request": {
+                "method": "PUT",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/physicalproducts/api/v1/credentials/:client_id",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "physicalproducts",
+                    "api",
+                    "v1",
+                    "credentials",
+                    ":client_id"
+                  ]
+                },
+                "description": "Auto-generated from Hotmart Developers docs (Gatsby `sample-code` extraction).\n\nConfidence: high.\nVerify path/query placeholders against the official docs and your environment `base_url`."
+              },
+              "response": []
+            },
+            {
+              "name": "DELETE /physicalproducts/api/v1/credentials/:client_id",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/physicalproducts/api/v1/credentials/:client_id?partner_identifier=:partner_identifier",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "physicalproducts",
+                    "api",
+                    "v1",
+                    "credentials",
+                    ":client_id"
+                  ],
+                  "query": [
+                    {
+                      "key": "partner_identifier",
+                      "value": ":partner_identifier",
+                      "description": ""
+                    }
+                  ]
+                },
+                "description": "Auto-generated from Hotmart Developers docs (Gatsby `sample-code` extraction).\n\nConfidence: high.\nVerify path/query placeholders against the official docs and your environment `base_url`."
+              },
+              "response": []
+            },
+            {
+              "name": "POST /physicalproducts/api/v1/product",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/physicalproducts/api/v1/product",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "physicalproducts",
+                    "api",
+                    "v1",
+                    "product"
+                  ]
+                },
+                "description": "Auto-generated from Hotmart Developers docs (Gatsby `sample-code` extraction).\n\nConfidence: high.\nVerify path/query placeholders against the official docs and your environment `base_url`."
+              },
+              "response": []
+            },
+            {
+              "name": "PUT /physicalproducts/api/v1/product/:product_ucode",
+              "request": {
+                "method": "PUT",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/physicalproducts/api/v1/product/:product_ucode",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "physicalproducts",
+                    "api",
+                    "v1",
+                    "product",
+                    ":product_ucode"
+                  ]
+                },
+                "description": "Auto-generated from Hotmart Developers docs (Gatsby `sample-code` extraction).\n\nConfidence: high.\nVerify path/query placeholders against the official docs and your environment `base_url`."
+              },
+              "response": []
+            },
+            {
+              "name": "PUT /physicalproducts/api/v1/product/:product_ucode/status",
+              "request": {
+                "method": "PUT",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/physicalproducts/api/v1/product/:product_ucode/status",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "physicalproducts",
+                    "api",
+                    "v1",
+                    "product",
+                    ":product_ucode",
+                    "status"
+                  ]
+                },
+                "description": "Auto-generated from Hotmart Developers docs (Gatsby `sample-code` extraction).\n\nConfidence: high.\nVerify path/query placeholders against the official docs and your environment `base_url`."
+              },
+              "response": []
+            },
+            {
+              "name": "POST /physicalproducts/api/v1/shipments/status",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/physicalproducts/api/v1/shipments/status",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "physicalproducts",
+                    "api",
+                    "v1",
+                    "shipments",
+                    "status"
+                  ]
+                },
+                "description": "Auto-generated from Hotmart Developers docs (Gatsby `sample-code` extraction).\n\nConfidence: high.\nVerify path/query placeholders against the official docs and your environment `base_url`."
+              },
+              "response": []
+            },
+            {
+              "name": "POST /physicalproducts/api/v1/shipments/tracking",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/physicalproducts/api/v1/shipments/tracking",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "physicalproducts",
+                    "api",
+                    "v1",
+                    "shipments",
+                    "tracking"
+                  ]
+                },
+                "description": "Auto-generated from Hotmart Developers docs (Gatsby `sample-code` extraction).\n\nConfidence: high.\nVerify path/query placeholders against the official docs and your environment `base_url`."
+              },
+              "response": []
+            },
+            {
+              "name": "POST /physicalproducts/api/v1/webhook",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/physicalproducts/api/v1/webhook",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "physicalproducts",
+                    "api",
+                    "v1",
+                    "webhook"
+                  ]
+                },
+                "description": "Auto-generated from Hotmart Developers docs (Gatsby `sample-code` extraction).\n\nConfidence: high.\nVerify path/query placeholders against the official docs and your environment `base_url`."
+              },
+              "response": []
+            },
+            {
+              "name": "PUT /physicalproducts/api/v1/webhook/:webhook_id",
+              "request": {
+                "method": "PUT",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/physicalproducts/api/v1/webhook/:webhook_id",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "physicalproducts",
+                    "api",
+                    "v1",
+                    "webhook",
+                    ":webhook_id"
+                  ]
+                },
+                "description": "Auto-generated from Hotmart Developers docs (Gatsby `sample-code` extraction).\n\nConfidence: high.\nVerify path/query placeholders against the official docs and your environment `base_url`."
+              },
+              "response": []
+            },
+            {
+              "name": "DELETE /physicalproducts/api/v1/webhook/:webhook_id",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/physicalproducts/api/v1/webhook/:webhook_id?partner_identifier=:partner_identifier",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "physicalproducts",
+                    "api",
+                    "v1",
+                    "webhook",
+                    ":webhook_id"
+                  ],
+                  "query": [
+                    {
+                      "key": "partner_identifier",
+                      "value": ":partner_identifier",
+                      "description": ""
+                    }
+                  ]
+                },
+                "description": "Auto-generated from Hotmart Developers docs (Gatsby `sample-code` extraction).\n\nConfidence: high.\nVerify path/query placeholders against the official docs and your environment `base_url`."
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Products API",
+          "item": [
+            {
+              "name": "DELETE /products/api/v1/coupon/:coupon_id",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/products/api/v1/coupon/:coupon_id",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "products",
+                    "api",
+                    "v1",
+                    "coupon",
+                    ":coupon_id"
+                  ]
+                },
+                "description": "Auto-generated from Hotmart Developers docs (Gatsby `sample-code` extraction).\n\nConfidence: high.\nVerify path/query placeholders against the official docs and your environment `base_url`."
+              },
+              "response": []
+            },
+            {
+              "name": "GET /products/api/v1/coupon/product/:product_id",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/products/api/v1/coupon/product/:product_id",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "products",
+                    "api",
+                    "v1",
+                    "coupon",
+                    "product",
+                    ":product_id"
+                  ]
+                },
+                "description": "Auto-generated from Hotmart Developers docs (Gatsby `sample-code` extraction).\n\nConfidence: high.\nVerify path/query placeholders against the official docs and your environment `base_url`."
+              },
+              "response": []
+            },
+            {
+              "name": "POST /products/api/v1/product/:product_id/coupon",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/products/api/v1/product/:product_id/coupon",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "products",
+                    "api",
+                    "v1",
+                    "product",
+                    ":product_id",
+                    "coupon"
+                  ]
+                },
+                "description": "Auto-generated from Hotmart Developers docs (Gatsby `sample-code` extraction).\n\nConfidence: high.\nVerify path/query placeholders against the official docs and your environment `base_url`."
+              },
+              "response": []
+            },
+            {
+              "name": "PUT /products/api/v1/product/configuration/:product_id",
+              "request": {
+                "method": "PUT",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/products/api/v1/product/configuration/:product_id",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "products",
+                    "api",
+                    "v1",
+                    "product",
+                    "configuration",
+                    ":product_id"
+                  ]
+                },
+                "description": "Auto-generated from Hotmart Developers docs (Gatsby `sample-code` extraction).\n\nConfidence: high.\nVerify path/query placeholders against the official docs and your environment `base_url`."
+              },
+              "response": []
+            },
+            {
+              "name": "GET /products/api/v1/products/:ucode/offers",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/products/api/v1/products/:ucode/offers",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "products",
+                    "api",
+                    "v1",
+                    "products",
+                    ":ucode",
+                    "offers"
+                  ]
+                },
+                "description": "Auto-generated from Hotmart Developers docs (Gatsby `sample-code` extraction).\n\nConfidence: high.\nVerify path/query placeholders against the official docs and your environment `base_url`."
+              },
+              "response": []
+            },
+            {
+              "name": "GET /products/api/v1/products/:ucode/plans",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/products/api/v1/products/:ucode/plans",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "products",
+                    "api",
+                    "v1",
+                    "products",
+                    ":ucode",
+                    "plans"
+                  ]
+                },
+                "description": "Auto-generated from Hotmart Developers docs (Gatsby `sample-code` extraction).\n\nConfidence: high.\nVerify path/query placeholders against the official docs and your environment `base_url`."
+              },
+              "response": []
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{access_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Auto-resolve base_url based on sandbox_mode flag",
+          "const isSandbox = pm.environment.get('sandbox_mode');",
+          "if (isSandbox === 'true' || isSandbox === true) {",
+          "    pm.environment.set('base_url', 'https://sandbox.hotmart.com');",
+          "} else {",
+          "    pm.environment.set('base_url', 'https://developers.hotmart.com');",
+          "}"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://developers.hotmart.com",
+      "description": "Production base URL. Overridden at runtime by the collection prerequest script based on sandbox_mode."
+    },
+    {
+      "key": "sandbox_base_url",
+      "value": "https://sandbox.hotmart.com",
+      "description": "Sandbox base URL (fictitious data, isolated from production)."
+    }
+  ]
+}

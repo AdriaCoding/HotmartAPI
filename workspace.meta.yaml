@@ -1,0 +1,14 @@
+# Metadata for Postman ↔ Git workflow (this folder is the canonical Hotmart workspace root).
+# The active Postman workspace binding lives one level up:
+#   docs/contracts/.postman/resources.yaml
+#
+# Duplicate IDs here so this submodule repo stays self-documenting when cloned alone.
+
+postman_workspace_id: c98a3d83-7e64-4f4e-97fd-bc67b9141832
+
+# Cloud collection linked from resources.yaml (YAML split under docs/contracts/postman/)
+cloud_collection_id: ffa6f55b-f68f-41b4-93c8-4481639107fe
+
+canonical_files:
+  collection_json: "Hotmart API — OrganicEcom.postman_collection.json"
+  environment_json: "Hotmart — OrganicEcom.postman_environment.json"

@@ -1,0 +1,14 @@
+# Crawl pipeline (regenerable; large JSON)
+hotmart-docs-crawl/output/
+hotmart-docs-crawl/.venv/
+
+# Python
+**/__pycache__/
+*.pyc
+
+# OS / editor
+.DS_Store
+Thumbs.db
+
+# Optional: local Postman / IDE
+*.local.json
