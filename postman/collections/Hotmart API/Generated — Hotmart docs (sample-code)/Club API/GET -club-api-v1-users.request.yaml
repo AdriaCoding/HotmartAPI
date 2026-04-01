@@ -8,14 +8,8 @@ description: >-
 
   Verify path/query placeholders against the official docs and your environment
   `base_url`.
-url: "{{base_url}}/club/api/v1/users"
+url: "{{base_url}}/club/api/v1/users?subdomain={{club_subdomain}}"
 method: GET
 queryParams:
-  - key: subdomain
-    value: "{{club_subdomain}}"
-    description: "Required. Club subdomain (e.g. my-subdomain)."
-  - key: email
-    value: ""
-    disabled: true
-    description: "Filter by subscriber email. Optional."
+  subdomain: "{{club_subdomain}}"
 order: 3000

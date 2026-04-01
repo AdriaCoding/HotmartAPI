@@ -1,0 +1,15 @@
+Dear support,
+
+I am a developer associated with OrganicEcom (Marc Verdú).
+We are working on an integration with your API (developers.hotmart.com/docs/es/), and we are facing some trouble.
+
+We have successfully passed through the auth flow, and we have even run some successful requests, as shown in the first figure. It is a screenshot from the API testing program Postman, but the results are the same using other methods such as curl.
+
+However, when we use the main endpoints we need for our application, GET /club/api/v1/users and GET /club/api/v1/modules, we get a 200 response with empty content, as shown in the second figure.
+
+It is mission-critical for us to ensure our app can only be accessed by active subscribers. We hope you can give us some clarity on this matter, or suggest an alternative way to access the list of subscribers in real-time.
+
+Moreover, I was not able to connect to the sandbox environment sandbox.hotmart.com. Some debugging on my side led me to believe it could be a DNS problem.
+
+Best regards,
+Adrià Lisa
