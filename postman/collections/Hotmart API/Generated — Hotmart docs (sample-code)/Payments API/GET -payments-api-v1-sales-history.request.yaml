@@ -1,13 +1,84 @@
 $kind: http-request
 name: GET /payments/api/v1/sales/history
 description: >-
-  Auto-generated from Hotmart Developers docs (Gatsby `sample-code` extraction).
+  Sales history: lists sales and details. Without `transaction` /
+  `transaction_status` filters, only APPROVED and COMPLETE statuses are
+  returned; add those filters for other statuses.
 
+  Query parameters (Hotmart Payments API docs):
 
-  Confidence: high.
+  - max_results — max items per page
 
-  Verify path/query placeholders against the official docs and your environment
-  `base_url`.
+  - page_token — pagination cursor (use next_page_token / prev_page_token from
+  page_info)
+
+  - product_id — 7-digit product id
+
+  - start_date, end_date — filter period, milliseconds since 1970-01-01 00:00:00
+  UTC
+
+  - sales_source — SRC code from the payment link (e.g.
+  pay.hotmart.com/...?src=...)
+
+  - transaction — transaction reference (e.g. HP17715690036014)
+
+  - buyer_name, buyer_email — filter by buyer
+
+  - transaction_status — APPROVED, BLOCKED, CANCELLED, CHARGEBACK, COMPLETE,
+  EXPIRED,
+    NO_FUNDS, OVERDUE, PARTIALLY_REFUNDED, PRE_ORDER, PRINTED_BILLET,
+    PROCESSING_TRANSACTION, PROTESTED, REFUNDED, STARTED, UNDER_ANALISYS, WAITING_PAYMENT
+
+  - payment_type — BILLET, CASH_PAYMENT, CREDIT_CARD, DIRECT_BANK_TRANSFER,
+  DIRECT_DEBIT,
+    FINANCED_BILLET, FINANCED_INSTALLMENT, GOOGLE_PAY, HOTCARD, HYBRID, MANUAL_TRANSFER,
+    PAYPAL, PAYPAL_INTERNACIONAL, PICPAY, PIX, SAMSUNG_PAY, WALLET
+
+  - offer_code — offer code
+
+  - commission_as — PRODUCER, COPRODUCER, AFFILIATE
+
+  Auto-generated baseline; verify against official docs and `base_url`.
 url: "{{base_url}}/payments/api/v1/sales/history"
 method: GET
+queryParams:
+  - key: max_results
+    value: "100"
+    disabled: true
+  - key: page_token
+    value: ""
+    disabled: true
+  - key: product_id
+    value: "{{product_id}}"
+    disabled: true
+  - key: start_date
+    value: ""
+    disabled: true
+  - key: end_date
+    value: ""
+    disabled: true
+  - key: sales_source
+    value: ""
+    disabled: true
+  - key: transaction
+    value: ""
+    disabled: true
+  - key: buyer_name
+    value: ""
+    disabled: true
+  - key: buyer_email
+    value: ""
+    disabled: true
+  - key: transaction_status
+    value: APPROVED
+    disabled: false
+  - key: payment_type
+    value: PIX
+    disabled: true
+  - key: offer_code
+    value: ""
+    disabled: true
+  - key: commission_as
+    value: PRODUCER
+    disabled: true
 order: 10000

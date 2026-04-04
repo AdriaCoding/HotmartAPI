@@ -8,6 +8,13 @@ description: >-
 
   Verify path/query placeholders against the official docs and your environment
   `base_url`.
-url: "{{base_url}}/payments/api/v1/subscriptions/summary"
+url: "{{base_url}}/payments/api/v1/subscriptions/summary?subscriber_code=8MWN9A\
+  U9&product_id=5092079"
 method: GET
+queryParams:
+  - key: subscriber_code
+    value: 8MWN9AU9
+    disabled: true
+  - key: product_id
+    value: "5092079"
 order: 20000

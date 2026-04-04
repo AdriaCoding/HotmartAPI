@@ -8,6 +8,8 @@ description: >-
 
   Verify path/query placeholders against the official docs and your environment
   `base_url`.
-url: "{{base_url}}/payments/api/v1/subscriptions/transactions"
+url: "{{base_url}}/payments/api/v1/subscriptions/transactions?product_id=5092079"
 method: GET
+queryParams:
+  product_id: "5092079"
 order: 23000

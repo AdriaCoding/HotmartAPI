@@ -1,0 +1,54 @@
+$kind: http-example
+name: Get Product List
+description: >-
+  Returns the list of products associated with the authenticated account.
+
+
+  All optional query params are included as disabled entries — enable them as
+  needed.
+
+
+  **Pagination:** supports cursor-based pagination via `page_token`. Use
+  `max_results` to control page size.
+request:
+  url: "{{base_url}}/products/api/v1/products"
+  method: GET
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    content-type: application/json
+    content-length: "459"
+    connection: keep-alive
+    cache-control: no-cache, no-store, max-age=0, must-revalidate
+    content-encoding: gzip
+    date: Thu, 02 Apr 2026 16:32:05 GMT
+    expires: "0"
+    pragma: no-cache
+    ratelimit-limit: "500"
+    ratelimit-remaining: "499"
+    ratelimit-reset: "55"
+    strict-transport-security: max-age=31536000 ; includeSubDomains
+    x-content-type-options: nosniff
+    x-frame-options: DENY
+    x-ratelimit-limit-minute: "500"
+    x-ratelimit-remaining-minute: "499"
+    x-xss-protection: "0"
+    x-cache: Miss from cloudfront
+    via: 1.1 a8a929dafe46e415e9e427a5235b65b4.cloudfront.net (CloudFront)
+    x-amz-cf-pop: BCN50-P1
+    alt-svc: h3=":443"; ma=86400
+    x-amz-cf-id: -Wf6pREt0ncHjVA8KPWBenZjImaJu8z5ToHtRW1Je7OQHs0h2_gIjQ==
+  body:
+    type: json
+    content: '{"page_info":{"results_per_page":5},"items":[{"name":"360 by Organic
+      Ecom","warranty_period":15,"format":"ONLINE_COURSE","ucode":"80114092-6fa2-4471-b4af-463ff48e2cd7","status":"PAUSED","id":6032057,"is_subscription":false,"created_at":1754676310000},{"name":"ADS
+      by Organic
+      Ecom","warranty_period":15,"format":"ONLINE_COURSE","ucode":"cf0bfe16-fe12-4c54-97e4-d54d8fe8af8e","status":"ACTIVE","id":5797407,"is_subscription":false,"created_at":1751368606000},{"name":"Formación
+      Organic Ecom
+      ","warranty_period":15,"format":"ONLINE_COURSE","ucode":"d5bd21e7-a1f6-43a7-a632-b43483611be0","status":"ACTIVE","id":5092079,"is_subscription":false,"created_at":1739381951000},{"name":"Renovación
+      Ads by Organic Ecom - 3
+      meses","warranty_period":15,"format":"ONLINE_COURSE","ucode":"3d81588a-504c-4fe8-8301-9774c3b965f9","status":"ACTIVE","id":6555514,"is_subscription":false,"created_at":1762084645000},{"name":"Renovación
+      Mentoría Formación Organic
+      Ecom","warranty_period":15,"format":"ONLINE_COURSE","ucode":"c0b3ca71-a070-45db-8f2c-a4c1cbf369c9","status":"ACTIVE","id":5144708,"is_subscription":false,"created_at":1740408265000}]}'
+order: 4389860120397824
